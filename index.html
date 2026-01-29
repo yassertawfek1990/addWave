@@ -1,303 +1,171 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <base target="_top">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Class Email Manager</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Class Email Manager</title>
 
-        body {
-            font-family: 'Google Sans', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+    }
 
-        .container {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
-            max-width: 600px;
-            width: 100%;
-        }
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.3);
+    }
 
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
+    h1 {
+      margin-bottom: 10px;
+    }
 
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
+    p {
+      color: #666;
+      font-size: 14px;
+    }
 
-        .form-group {
-            margin-bottom: 25px;
-        }
+    label {
+      display: block;
+      margin-top: 20px;
+      font-weight: bold;
+    }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
-            font-size: 14px;
-        }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
 
-        input[type="text"],
-        textarea {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-            font-family: inherit;
-        }
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
 
-        input[type="text"]:focus,
-        textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
 
-        textarea {
-            resize: vertical;
-            min-height: 150px;
-            line-height: 1.5;
-        }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
 
-        .helper-text {
-            font-size: 12px;
-            color: #666;
-            margin-top: 6px;
-        }
+    .message {
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 6px;
+      display: none;
+    }
 
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 14px 32px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
+    .success {
+      background: #d4edda;
+      color: #155724;
+    }
 
-        button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        button:active:not(:disabled) {
-            transform: translateY(0);
-        }
-
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .message {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-top: 20px;
-            display: none;
-        }
-
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .message.show {
-            display: block;
-        }
-
-        .sheet-link {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .sheet-link:hover {
-            text-decoration: underline;
-        }
-    </style>
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>📚 Class Email Manager</h1>
-        <p class="subtitle">Create Google Sheets with class enrollment lists</p>
+  <div class="container">
+    <h1>📚 Class Email Manager</h1>
+    <p>Create a Google Sheet with enrolled students</p>
 
-        <form id="classForm">
-            <div class="form-group">
-                <label for="className">Class Name</label>
-                <input type="text" id="className" placeholder="e.g., Math 101, Biology Advanced" required>
-            </div>
+    <label>Class Name</label>
+    <input id="className" placeholder="Math 101" />
 
-            <div class="form-group">
-                <label for="emailList">Email List</label>
-                <textarea id="emailList" placeholder="Enter one email per line:
-student1@example.com
-student2@example.com
-student3@example.com" required></textarea>
-                <p class="helper-text">Enter one email address per line</p>
-            </div>
+    <label>Email List (one per line)</label>
+    <textarea id="emails" placeholder="student1@email.com"></textarea>
 
-            <button type="submit" id="submitButton">Create Google Sheet</button>
-        </form>
+    <button id="submit">Create Sheet</button>
 
-        <div class="message" id="message"></div>
-    </div>
+    <div id="message" class="message"></div>
+  </div>
 
-    <script>
-        // Replace this with your actual Apps Script Web App URL after deployment
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby7COaCyAzc30HOHtuoOhjWANWwAnFw8tnI-EF6vy9sjkp7sUv6quNoA3yU1_YiWfuABg/exec';
+  <script>
+    const SCRIPT_URL =
+      "https://script.google.com/macros/s/AKfycbyWxSMuApc6JfBBmNk7HVgMCy6Yo0ukW7t5U6pjynJG4NVgXYQrf8dt5HZn3zOdUlPd9A/exec";
 
-        document.getElementById('classForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const className = document.getElementById('className').value.trim();
-            const emailListText = document.getElementById('emailList').value.trim();
-            
-            if (!className || !emailListText) {
-                showMessage('Please fill in all fields', 'error');
-                return;
-            }
+    const btn = document.getElementById("submit");
+    const msg = document.getElementById("message");
 
-            const emails = emailListText.split('\n')
-                .map(email => email.trim())
-                .filter(email => email.length > 0);
+    btn.onclick = async () => {
+      msg.style.display = "none";
 
-            if (emails.length === 0) {
-                showMessage('Please enter at least one email address', 'error');
-                return;
-            }
+      const className = document.getElementById("className").value.trim();
+      const emails = document
+        .getElementById("emails")
+        .value
+        .split("\n")
+        .map(e => e.trim())
+        .filter(Boolean);
 
-            // Validate emails
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            const invalidEmails = emails.filter(email => !emailRegex.test(email));
-            
-            if (invalidEmails.length > 0) {
-                showMessage('Invalid email format: ' + invalidEmails.join(', '), 'error');
-                return;
-            }
+      if (!className || emails.length === 0) {
+        show("Please enter class name and at least one email.", "error");
+        return;
+      }
 
-            submitToAppsScript(className, emails);
+      btn.disabled = true;
+      btn.textContent = "Creating...";
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ className, emails })
         });
 
-        function submitToAppsScript(className, emails) {
-            const submitButton = document.getElementById('submitButton');
-            submitButton.disabled = true;
-            submitButton.textContent = 'Creating...';
+        const data = await res.json();
 
-            // Create a hidden iframe
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.name = 'hiddenFrame';
-            document.body.appendChild(iframe);
-
-            // Create a form
-            const form = document.createElement('form');
-            form.action = APPS_SCRIPT_URL;
-            form.method = 'POST';
-            form.target = 'hiddenFrame';
-
-            // Add className field
-            const classNameInput = document.createElement('input');
-            classNameInput.type = 'hidden';
-            classNameInput.name = 'className';
-            classNameInput.value = className;
-            form.appendChild(classNameInput);
-
-            // Add emails field
-            const emailsInput = document.createElement('input');
-            emailsInput.type = 'hidden';
-            emailsInput.name = 'emails';
-            emailsInput.value = JSON.stringify(emails);
-            form.appendChild(emailsInput);
-
-            document.body.appendChild(form);
-            form.submit();
-
-            // Listen for response via iframe
-            let checkCount = 0;
-            const checkInterval = setInterval(function() {
-                checkCount++;
-                try {
-                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    const body = iframeDoc.body;
-                    
-                    if (body && body.textContent) {
-                        const response = JSON.parse(body.textContent);
-                        
-                        clearInterval(checkInterval);
-                        submitButton.disabled = false;
-                        submitButton.textContent = 'Create Google Sheet';
-                        
-                        if (response.success) {
-                            showMessage(
-                                'Success! Created sheet "' + response.className + '" with ' + response.emailCount + ' emails. <a href="' + response.url + '" target="_blank" class="sheet-link">Open Sheet</a>',
-                                'success'
-                            );
-                            
-                            // Reset form
-                            document.getElementById('className').value = '';
-                            document.getElementById('emailList').value = '';
-                        } else {
-                            showMessage('Error: ' + (response.error || 'Unknown error'), 'error');
-                        }
-                        
-                        // Cleanup
-                        document.body.removeChild(form);
-                        document.body.removeChild(iframe);
-                    }
-                } catch (e) {
-                    // Can't access iframe yet, keep trying
-                }
-
-                // Timeout after 30 seconds
-                if (checkCount > 60) {
-                    clearInterval(checkInterval);
-                    submitButton.disabled = false;
-                    submitButton.textContent = 'Create Google Sheet';
-                    showMessage('Request timed out. Please try again.', 'error');
-                    document.body.removeChild(form);
-                    document.body.removeChild(iframe);
-                }
-            }, 500);
+        if (data.success) {
+          show(
+            `✅ Sheet created! 
+             <br><a href="${data.url}" target="_blank">Open Sheet</a>`,
+            "success"
+          );
+          document.getElementById("className").value = "";
+          document.getElementById("emails").value = "";
+        } else {
+          show(data.error, "error");
         }
+      } catch (err) {
+        show("Network error: " + err.message, "error");
+      }
 
-        function showMessage(text, type) {
-            const message = document.getElementById('message');
-            message.innerHTML = text;
-            message.className = 'message ' + type + ' show';
-            
-            setTimeout(function() {
-                message.classList.remove('show');
-            }, 8000);
-        }
-    </script>
+      btn.disabled = false;
+      btn.textContent = "Create Sheet";
+    };
+
+    function show(text, type) {
+      msg.innerHTML = text;
+      msg.className = `message ${type}`;
+      msg.style.display = "block";
+    }
+  </script>
 </body>
 </html>
