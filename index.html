@@ -173,7 +173,7 @@ student3@example.com" required></textarea>
 
     <script>
         // Replace this with your actual Apps Script Web App URL after deployment
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz7NjMlWsHK72JE6SJyPnrK9ELpWYhvOlP_3RdRJva6h9m091sohPjS7WA8nfcNSmO1aQ/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby7COaCyAzc30HOHtuoOhjWANWwAnFw8tnI-EF6vy9sjkp7sUv6quNoA3yU1_YiWfuABg/exec';
 
         document.getElementById('classForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -204,55 +204,90 @@ student3@example.com" required></textarea>
                 return;
             }
 
-            // Disable button and show loading
+            submitToAppsScript(className, emails);
+        });
+
+        function submitToAppsScript(className, emails) {
             const submitButton = document.getElementById('submitButton');
             submitButton.disabled = true;
             submitButton.textContent = 'Creating...';
 
-            // Use JSONP to bypass CORS
-            const callbackName = 'callback_' + Date.now();
-            
-            window[callbackName] = function(data) {
-                submitButton.disabled = false;
-                submitButton.textContent = 'Create Google Sheet';
+            // Create a hidden iframe
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.name = 'hiddenFrame';
+            document.body.appendChild(iframe);
 
-                if (data.success) {
-                    showMessage(
-                        'Success! Created sheet "' + data.className + '" with ' + data.emailCount + ' emails. <a href="' + data.url + '" target="_blank" class="sheet-link">Open Sheet</a>',
-                        'success'
-                    );
+            // Create a form
+            const form = document.createElement('form');
+            form.action = APPS_SCRIPT_URL;
+            form.method = 'POST';
+            form.target = 'hiddenFrame';
+
+            // Add className field
+            const classNameInput = document.createElement('input');
+            classNameInput.type = 'hidden';
+            classNameInput.name = 'className';
+            classNameInput.value = className;
+            form.appendChild(classNameInput);
+
+            // Add emails field
+            const emailsInput = document.createElement('input');
+            emailsInput.type = 'hidden';
+            emailsInput.name = 'emails';
+            emailsInput.value = JSON.stringify(emails);
+            form.appendChild(emailsInput);
+
+            document.body.appendChild(form);
+            form.submit();
+
+            // Listen for response via iframe
+            let checkCount = 0;
+            const checkInterval = setInterval(function() {
+                checkCount++;
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    const body = iframeDoc.body;
                     
-                    // Reset form
-                    document.getElementById('className').value = '';
-                    document.getElementById('emailList').value = '';
-                } else {
-                    showMessage('Error: ' + (data.error || 'Unknown error'), 'error');
+                    if (body && body.textContent) {
+                        const response = JSON.parse(body.textContent);
+                        
+                        clearInterval(checkInterval);
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Create Google Sheet';
+                        
+                        if (response.success) {
+                            showMessage(
+                                'Success! Created sheet "' + response.className + '" with ' + response.emailCount + ' emails. <a href="' + response.url + '" target="_blank" class="sheet-link">Open Sheet</a>',
+                                'success'
+                            );
+                            
+                            // Reset form
+                            document.getElementById('className').value = '';
+                            document.getElementById('emailList').value = '';
+                        } else {
+                            showMessage('Error: ' + (response.error || 'Unknown error'), 'error');
+                        }
+                        
+                        // Cleanup
+                        document.body.removeChild(form);
+                        document.body.removeChild(iframe);
+                    }
+                } catch (e) {
+                    // Can't access iframe yet, keep trying
                 }
-                
-                // Cleanup
-                document.body.removeChild(script);
-                delete window[callbackName];
-            };
 
-            // Create script tag for JSONP request
-            const script = document.createElement('script');
-            const params = new URLSearchParams({
-                className: className,
-                emails: JSON.stringify(emails),
-                callback: callbackName
-            });
-            
-            script.src = APPS_SCRIPT_URL + '?' + params.toString();
-            script.onerror = function() {
-                submitButton.disabled = false;
-                submitButton.textContent = 'Create Google Sheet';
-                showMessage('Error connecting to server. Please try again.', 'error');
-                document.body.removeChild(script);
-                delete window[callbackName];
-            };
-            
-            document.body.appendChild(script);
-        });
+                // Timeout after 30 seconds
+                if (checkCount > 60) {
+                    clearInterval(checkInterval);
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Create Google Sheet';
+                    showMessage('Request timed out. Please try again.', 'error');
+                    document.body.removeChild(form);
+                    document.body.removeChild(iframe);
+                }
+            }, 500);
+        }
 
         function showMessage(text, type) {
             const message = document.getElementById('message');
